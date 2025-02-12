@@ -1,8 +1,6 @@
-# Quantum Model Merger: Advanced AI Model Blending
+# Quantum Merger: SDXL Model Blending
 
 ## Key Differences from Original Implementation
-
-The fork introduces significant improvements over the original implementation:
 
 - **Advanced Architecture**
   - Introduced `QuantumMerger` class for better code organization
