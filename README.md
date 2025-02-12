@@ -1,6 +1,9 @@
 # Quantum Model Merger
 
 This script merges two Stable Diffusion models using a novel technique inspired by quantum mechanics principles, including entanglement, decoherence, and frequency-domain processing.  It uses a hypernetwork conditioned on a text prompt to guide the merging process, and incorporates chunked FFT processing for memory efficiency, particularly with large models.
+Used for the development of:
+https://civitai.com/models/1245906/illustrious-bunny
+https://civitai.com/models/1220203/bunnygunny-v2-noob-pony
 
 ## Features
 
