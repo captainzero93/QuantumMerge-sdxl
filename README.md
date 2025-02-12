@@ -115,6 +115,15 @@ The script will guide you through:
 - `decoherence_factor`: Manages random parameter averaging (0.0-1.0)
   - Lower values: More deterministic merging
   - Higher values: More random parameter selection
+ 
+# Adjustment Guidelines
+
+| Scenario | ent_strength | decoherence |
+|----------|--------------|-------------|
+| Style-focused merge | 0.72-0.75 | 0.12-0.15 |
+| Detail-preserving merge | 0.60-0.65 | 0.20-0.25 |
+| Experimental/artistic merge | 0.78-0.82 | 0.25-0.30 |
+| Conservative safety merge | 0.55-0.60 | 0.10-0.12 |
 
 - `chunk_size`: Adjusts memory processing chunks
   - Smaller values: Less memory usage, potentially slower
