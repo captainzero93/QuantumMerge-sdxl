@@ -125,6 +125,8 @@ The script will guide you through:
 | Experimental/artistic merge | 0.78-0.82 | 0.25-0.30 |
 | Conservative safety merge | 0.55-0.60 | 0.10-0.12 |
 
+ For initial experiments, start with these defaults and adjust ±0.03 based on your specific use case.
+ 
 - `chunk_size`: Adjusts memory processing chunks
   - Smaller values: Less memory usage, potentially slower
   - Larger values: Faster processing, more memory intensive
