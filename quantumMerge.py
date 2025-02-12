@@ -427,10 +427,65 @@ def validate_parameters(entanglement_strength, decoherence_factor):
     
     return entanglement_strength, decoherence_factor
 
+def check_admin():
+    """
+    Check if the script has administrator privileges.
+    
+    Returns:
+        bool: True if running with admin rights, False otherwise
+    """
+    try:
+        if platform.system() == 'Windows':
+            import ctypes
+            return ctypes.windll.shell32.IsUserAnAdmin() != 0
+        else:
+            return os.geteuid() == 0  # Unix-like systems
+    except:
+        return False
+
+def ensure_admin():
+    """
+    Ensure the script is running with administrator privileges.
+    If not, restart the script with elevated privileges.
+    """
+    if not check_admin():
+        print("\nAdmin privileges are required to save merged models.")
+        print("Please run this script as administrator.")
+        
+        if platform.system() == 'Windows':
+            print("\nWould you like to restart the script with admin privileges?")
+            response = input("Restart as admin? (y/n): ").lower()
+            if response == 'y':
+                import sys
+                import ctypes
+                
+                # Get the command that was used to start this script
+                script = sys.argv[0]
+                params = ' '.join(sys.argv[1:])
+                
+                # Prepare the runas command
+                cmd = f'"{sys.executable}" "{script}" {params}'
+                
+                try:
+                    # Trigger UAC prompt and restart with admin rights
+                    ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, cmd, None, 1)
+                    sys.exit(0)
+                except Exception as e:
+                    print(f"\nFailed to restart with admin privileges: {e}")
+                    print("Please manually run the script as administrator.")
+                    sys.exit(1)
+            else:
+                print("\nContinuing without admin privileges (saving might fail)...")
+        else:
+            print("Please restart the script with 'sudo'")
+            sys.exit(1)
+
 def main():
     """
     Main function to interactively merge AI models.
     """
+    # Check for admin rights at startup
+    ensure_admin()
     try:
         print("\nAI Model Quantum Merger")
         print("=" * 50)
