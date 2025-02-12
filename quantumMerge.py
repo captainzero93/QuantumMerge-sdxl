@@ -467,9 +467,25 @@ def ensure_admin():
                 cmd = f'"{sys.executable}" "{script}" {params}'
                 
                 try:
-                    # Trigger UAC prompt and restart with admin rights
-                    ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, cmd, None, 1)
+                    import subprocess
+                    
+                    # Create the command to run
+                    if hasattr(sys, '_MEIPASS'):  # Check if running as exe
+                        script_cmd = [sys.executable]
+                    else:
+                        script_cmd = [sys.executable, script]
+                    
+                    # Add any additional parameters
+                    if params:
+                        script_cmd.extend(params.split())
+                    
+                    # Use subprocess with elevated privileges
+                    subprocess.run(["runas", "/user:Administrator"] + script_cmd, check=True)
                     sys.exit(0)
+                except subprocess.CalledProcessError:
+                    print("\nUAC elevation was canceled. Please run the script as administrator manually.")
+                    print("Right-click Command Prompt/PowerShell and select 'Run as administrator'")
+                    sys.exit(1)
                 except Exception as e:
                     print(f"\nFailed to restart with admin privileges: {e}")
                     print("Please manually run the script as administrator.")
