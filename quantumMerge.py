@@ -478,8 +478,14 @@ def main():
         print("\nAdvanced Parameters (press Enter for defaults):")
         print("-" * 50)
         try:
-            entanglement_strength = float(input("\nEntanglement Strength (default 0.7714, range 0-1): ") or 0.7714)
-            decoherence_factor = float(input("Decoherence Factor (default 0.2, range 0-1): ") or 0.2)
+            print("\nMerge Style Guidelines:")
+            print("- Conservative merge (minimal style change):     ent=0.60-0.65  dec=0.12-0.15")
+            print("- Balanced merge (best of both):                ent=0.65-0.70  dec=0.18-0.22")
+            print("- Style-focused merge (more creative blend):    ent=0.70-0.75  dec=0.15-0.18")
+            print("- Experimental merge (maximum creative blend):  ent=0.75-0.80  dec=0.22-0.25")
+            
+            entanglement_strength = float(input("\nEntanglement Strength (default 0.65, range 0-1): ") or 0.65)
+            decoherence_factor = float(input("Decoherence Factor (default 0.18, range 0-1): ") or 0.18)
         except ValueError:
             print("\nInvalid input. Using default parameters.")
             entanglement_strength = 0.7714
