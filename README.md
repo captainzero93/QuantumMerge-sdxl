@@ -116,14 +116,11 @@ The script will guide you through:
   - Lower values: More deterministic merging
   - Higher values: More random parameter selection
  
-- Adjustment Guidelines
-
-| Scenario | ent_strength | decoherence |
-|----------|--------------|-------------|
-| Style-focused merge | 0.72-0.75 | 0.12-0.15 |
-| Detail-preserving merge | 0.60-0.65 | 0.20-0.25 |
-| Experimental/artistic merge | 0.78-0.82 | 0.25-0.30 |
-| Conservative safety merge | 0.55-0.60 | 0.10-0.12 |
+Recommended Guidelines:
+Style-focused merge:      ent_strength: 0.70-0.75    decoherence: 0.15-0.18
+Detail-preserving merge:  ent_strength: 0.65-0.70    decoherence: 0.18-0.22
+Experimental merge:       ent_strength: 0.75-0.80    decoherence: 0.22-0.25
+Conservative merge:       ent_strength: 0.60-0.65    decoherence: 0.12-0.15
 
  For initial experiments, start with these defaults and adjust ±0.03 based on your specific use case.
  
