@@ -1,11 +1,17 @@
 # Quantum Merger: SDXL Model Blending
 
+Note: This version expects the clip l and g from SD3
+
 ## Key Differences from Original Implementation
 
 - **Advanced Architecture**
+
+  - Added a proper transformer-based architecture with self-attention
+  - Included positional embeddings for better sequence handling
+  - Added multiple transformer blocks for deeper feature extraction
+  - Incorporated proper layer normalization and dropout
+  - Added residual connections for better gradient flow
   - Introduced `QuantumMerger` class for better code organization
-  - Implemented comprehensive error handling and logging
-  - Added type hinting for improved code reliability
 
 - **Performance Enhancements**
   - More sophisticated FFT-based parameter blending
@@ -21,10 +27,10 @@
   - Automatic GPU/CPU device selection
 
 - **Debugging Capabilities**
-  - Comprehensive logging with multiple severity levels
   - Detailed error reporting
   - Progress tracking
   - Explicit handling of model parameter conflicts
+  - Implemented comprehensive error handling and logging
 
 ## Overview
 
