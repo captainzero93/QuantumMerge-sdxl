@@ -9,6 +9,36 @@ import psutil
 import platform
 from pathlib import Path
 
+def check_admin():
+    """
+    Check if the script has administrator privileges.
+    """
+    try:
+        if platform.system() == 'Windows':
+            import ctypes
+            return ctypes.windll.shell32.IsUserAnAdmin() != 0
+        else:
+            return os.geteuid() == 0  # Unix-like systems
+    except:
+        return False
+
+def ensure_admin():
+    """
+    Check for administrator privileges and exit with instructions if needed.
+    """
+    if not check_admin():
+        print("\nThis script requires administrator privileges to save merged models.")
+        print("\nPlease run this script by:")
+        if platform.system() == 'Windows':
+            print("1. Right-click on Command Prompt or PowerShell")
+            print("2. Select 'Run as administrator'")
+            print("3. Navigate to the script directory")
+            print("4. Run: python quantumMerge.py")
+        else:
+            print("1. Open terminal")
+            print("2. Run: sudo python quantumMerge.py")
+        sys.exit(1)
+
 def get_available_memory():
     """
     Get available GPU and system memory.
@@ -43,7 +73,6 @@ def calculate_optimal_chunk_size(param_size):
     gpu_memory, system_memory = get_available_memory()
     
     # Calculate memory needed for processing one chunk
-    # We need space for: 2 input chunks, FFT results, blended results, and some overhead
     memory_per_element = 4  # bytes per float32 element
     memory_overhead_factor = 3  # Factor for FFT and intermediate results
     
@@ -127,8 +156,6 @@ def get_validated_path(prompt, is_output=False):
     """
     while True:
         file_path = input(prompt).strip().replace('"', '').replace("'", '')
-        
-        # Convert to Path object for better cross-platform handling
         path = Path(file_path)
         
         if is_output:
@@ -137,17 +164,7 @@ def get_validated_path(prompt, is_output=False):
                 parent = path.parent
                 if not parent.exists():
                     parent.mkdir(parents=True)
-                
-                # Test write permissions by trying to create/remove a test file
-                test_file = parent / '.write_test'
-                try:
-                    test_file.touch()
-                    test_file.unlink()
-                    return str(path)
-                except (OSError, PermissionError):
-                    print(f"Error: No write permission in directory: {parent}")
-                    continue
-                
+                return str(path)
             except Exception as e:
                 print(f"Error validating output path: {e}")
                 continue
@@ -251,14 +268,12 @@ def process_fft_chunked(param1_half, param2_half, hyper_out, decoherence_mask, c
                 
         except RuntimeError as e:
             if "out of memory" in str(e):
-                # If OOM occurs, clear cache and try with smaller chunk size
                 torch.cuda.empty_cache()
                 gc.collect()
                 chunk_size = chunk_size // 2
                 print(f"Reducing chunk size to {chunk_size} due to OOM error")
                 if chunk_size < 32:
                     raise RuntimeError("Unable to process with minimum chunk size")
-                # Retry this chunk
                 i -= chunk_size
                 continue
             else:
@@ -285,7 +300,6 @@ def safe_save_model(model_dict, output_path, max_retries=3):
             if attempt < max_retries - 1:
                 print(f"\nError saving model (attempt {attempt + 1}/{max_retries}): {e}")
                 print("Retrying...")
-                # Clear any potential file handles
                 gc.collect()
             else:
                 print(f"\nFailed to save model after {max_retries} attempts")
@@ -300,7 +314,7 @@ def safe_save_model(model_dict, output_path, max_retries=3):
                 raise RuntimeError(f"Failed to save model: {e}")
 
 def quantum_merge_models(model1_path, model2_path, prompt, output_path,
-                       entanglement_strength=0.7714, decoherence_factor=0.2):
+                       entanglement_strength=0.65, decoherence_factor=0.18):
     """
     Merge two AI models using a quantum-inspired blending technique.
     
@@ -316,15 +330,23 @@ def quantum_merge_models(model1_path, model2_path, prompt, output_path,
         model1 = load_file(model1_path)
         model2 = load_file(model2_path)
 
+        # Create a more sophisticated hypernetwork for SDXL
         hypernet = torch.nn.Sequential(
-            torch.nn.Linear(768, 1024),
+            torch.nn.Linear(1280, 1536),  # Scaled up input for SDXL
+            torch.nn.LayerNorm(1536),     # Add normalization for stability
             torch.nn.GELU(),
-            torch.nn.Linear(1024, 256),
+            torch.nn.Linear(1536, 1024),
+            torch.nn.Dropout(0.1),        # Add dropout to prevent overfitting
+            torch.nn.GELU(),
+            torch.nn.Linear(1024, 512),
+            torch.nn.LayerNorm(512),
+            torch.nn.GELU(),
+            torch.nn.Linear(512, 256),
             torch.nn.Tanh()
         ).cuda().half()
 
         with torch.no_grad():
-            clip_model_name = "openai/clip-vit-large-patch14"
+            clip_model_name = "stabilityai/stable-diffusion-xl-base-1.0"  # Updated for SDXL
             ensure_model_available(clip_model_name)
             tokenizer = CLIPTokenizer.from_pretrained(clip_model_name)
             
@@ -432,6 +454,9 @@ def main():
     Main function to interactively merge AI models.
     """
     try:
+        # Check for admin rights at startup
+        ensure_admin()
+        
         print("\nAI Model Quantum Merger")
         print("=" * 50)
         
@@ -456,13 +481,6 @@ def main():
                 f"Enter path to save the merged model (default: {os.path.join(output_dir, output_filename)}): ",
                 is_output=True
             ) or os.path.join(output_dir, output_filename)
-            
-            # Only check for file existence if custom path was provided
-            if output_path != os.path.join(output_dir, output_filename):
-                if os.path.exists(output_path):
-                    overwrite = input("Output file already exists. Overwrite? (y/n): ").lower()
-                    if overwrite != 'y':
-                        continue
             break
         
         # Get guiding prompt
@@ -475,21 +493,19 @@ def main():
             print("Prompt cannot be empty. Please enter a guiding prompt.")
         
         # Optional: Adjust advanced parameters
-        print("\nAdvanced Parameters (press Enter for defaults):")
-        print("-" * 50)
+        print("\nMerge Style Guidelines:")
+        print("- Conservative merge (minimal style change):     ent=0.60-0.65  dec=0.12-0.15")
+        print("- Balanced merge (best of both):                ent=0.65-0.70  dec=0.18-0.22")
+        print("- Style-focused merge (more creative blend):    ent=0.70-0.75  dec=0.15-0.18")
+        print("- Experimental merge (maximum creative blend):  ent=0.75-0.80  dec=0.22-0.25")
+        
         try:
-            print("\nMerge Style Guidelines:")
-            print("- Conservative merge (minimal style change):     ent=0.60-0.65  dec=0.12-0.15")
-            print("- Balanced merge (best of both):                ent=0.65-0.70  dec=0.18-0.22")
-            print("- Style-focused merge (more creative blend):    ent=0.70-0.75  dec=0.15-0.18")
-            print("- Experimental merge (maximum creative blend):  ent=0.75-0.80  dec=0.22-0.25")
-            
             entanglement_strength = float(input("\nEntanglement Strength (default 0.65, range 0-1): ") or 0.65)
             decoherence_factor = float(input("Decoherence Factor (default 0.18, range 0-1): ") or 0.18)
         except ValueError:
             print("\nInvalid input. Using default parameters.")
-            entanglement_strength = 0.7714
-            decoherence_factor = 0.2
+            entanglement_strength = 0.65
+            decoherence_factor = 0.18
         
         # Validate parameters
         entanglement_strength, decoherence_factor = validate_parameters(
