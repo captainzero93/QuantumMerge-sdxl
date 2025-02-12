@@ -457,10 +457,12 @@ def main():
                 is_output=True
             ) or os.path.join(output_dir, output_filename)
             
-            if os.path.exists(output_path):
-                overwrite = input("Output file already exists. Overwrite? (y/n): ").lower()
-                if overwrite != 'y':
-                    continue
+            # Only check for file existence if custom path was provided
+            if output_path != os.path.join(output_dir, output_filename):
+                if os.path.exists(output_path):
+                    overwrite = input("Output file already exists. Overwrite? (y/n): ").lower()
+                    if overwrite != 'y':
+                        continue
             break
         
         # Get guiding prompt
