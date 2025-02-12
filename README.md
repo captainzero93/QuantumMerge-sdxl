@@ -116,7 +116,7 @@ The script will guide you through:
   - Lower values: More deterministic merging
   - Higher values: More random parameter selection
  
-# Adjustment Guidelines
+- Adjustment Guidelines
 
 | Scenario | ent_strength | decoherence |
 |----------|--------------|-------------|
