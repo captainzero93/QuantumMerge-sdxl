@@ -89,7 +89,7 @@ pip install -r requirements.txt
 
 ## Usage
 
-Run the script interactively:
+Run the script interactively ( AS ADMIN to avoid file save errors ):
 ```bash
 python quantum_model_merger.py
 ```
